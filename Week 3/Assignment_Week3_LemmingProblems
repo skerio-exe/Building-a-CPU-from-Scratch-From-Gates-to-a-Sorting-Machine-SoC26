@@ -1,0 +1,206 @@
+//No. of states = 2
+//LEFT -> Lemming is moving left
+//RIGHT -> Lemming is moving right
+
+
+module Lemming1(
+    input clk,
+    input areset,    // Freshly brainwashed Lemmings walk left.
+    input bump_left,
+    input bump_right,
+    output walk_left,
+    output walk_right); //  
+
+    parameter LEFT=0, RIGHT=1;
+    reg state, next_state;
+
+    always @(*) begin
+        case(state)
+            LEFT: if(bump_left) next_state = RIGHT;
+            else next_state = LEFT;
+            RIGHT: if(bump_right) next_state = LEFT;
+            else next_state = RIGHT;
+        endcase
+    end
+
+    always @(posedge clk, posedge areset) begin
+        if(areset) state <= LEFT;
+        else state <= next_state;
+    end
+
+    assign walk_left = (state == LEFT);
+    assign walk_right = (state ==RIGHT);
+
+endmodule
+
+
+
+//No. of states = 4
+//LEFT -> Lemming is moving left
+//RIGHT -> Lemming is moving right
+//FALLING_LEFT -> Falling, but was moving left before falling
+//FALLING_RIGHT -> Falling, but was moving right before falling
+
+module Lemming2(
+    input clk,
+    input areset,    // Freshly brainwashed Lemmings walk left.
+    input bump_left,
+    input bump_right,
+    input ground,
+    output walk_left,
+    output walk_right,
+    output aaah ); 
+
+    parameter LEFT=0, RIGHT=1, FALLING_LEFT = 2, FALLING_RIGHT=3;
+    reg [1:0] state, next_state;
+
+    always @(*) begin
+        case(state)
+            LEFT: if(~ground) next_state = FALLING_LEFT;
+                else if(bump_left) next_state = RIGHT;
+            else next_state = LEFT;
+            RIGHT: if(~ground) next_state = FALLING_RIGHT;
+                else if(bump_right) next_state = LEFT;
+            else next_state = RIGHT;
+            FALLING_LEFT: if(ground) next_state = LEFT;
+            FALLING_RIGHT: if(ground) next_state = RIGHT;
+        endcase
+    end
+
+    always @(posedge clk, posedge areset) begin
+        if(areset) state <= LEFT;
+        else state <= next_state;
+    end
+
+    assign walk_left = (state == LEFT);
+    assign walk_right = (state == RIGHT);
+    assign aaah = (state == FALLING_LEFT)|(state == FALLING_RIGHT);
+endmodule
+
+
+
+//No. of states = 6
+//LEFT -> Lemming is moving left
+//RIGHT -> Lemming is moving right
+//FALLING_LEFT -> Falling, but was moving left before falling/(digging but is now falling)
+//FALLING_RIGHT -> Falling, but was moving right before falling/(digging but is now falling)
+//DIG_L -> Digging, but was moving left before digging
+//DIG_R -> Digging, but was moving right before digging
+
+module top_module(
+    input clk,
+    input areset,    // Freshly brainwashed Lemmings walk left.
+    input bump_left,
+    input bump_right,
+    input ground,
+    input dig,
+    output walk_left,
+    output walk_right,
+    output aaah,
+    output digging ); 
+
+    parameter LEFT=0, RIGHT=1, FALLING_LEFT = 2, FALLING_RIGHT = 3, DIG_L = 4, DIG_R = 5;
+    reg [2:0] state, next_state;
+
+    always @(*) begin
+        case(state)
+            LEFT: if(~ground) next_state = FALLING_LEFT;
+            	else if(dig) next_state = DIG_L;
+                else if(bump_left) next_state = RIGHT;
+            	else next_state = LEFT;
+            RIGHT: if(~ground) next_state = FALLING_RIGHT;
+            	else if(dig) next_state = DIG_R;
+                else if(bump_right) next_state = LEFT;
+            	else next_state = RIGHT;
+            FALLING_LEFT: if(ground) next_state = LEFT;
+            else next_state = FALLING_LEFT;
+            FALLING_RIGHT: if(ground) next_state = RIGHT;
+            else next_state = FALLING_RIGHT;
+            DIG_L: if(~ground) next_state = FALLING_LEFT;
+            else next_state = DIG_L;
+            DIG_R: if(~ground) next_state = FALLING_RIGHT;
+            else next_state = DIG_R;
+        endcase
+    end
+
+    always @(posedge clk, posedge areset) begin
+        if(areset) state <= LEFT;
+        else state <= next_state;
+    end
+
+    assign walk_left = (state == LEFT);
+    assign walk_right = (state == RIGHT);
+    assign aaah = (state == FALLING_LEFT)|(state == FALLING_RIGHT);
+    assign digging = (state == DIG_L)|(state == DIG_R);
+    
+endmodule
+
+
+
+//No. of states = 7
+//LEFT -> Lemming is moving left
+//RIGHT -> Lemming is moving right
+//FALLING_LEFT -> Falling, but was moving left before falling/(digging but is now falling)
+//FALLING_RIGHT -> Falling, but was moving right before falling/(digging but is now falling)
+//DIG_L -> Digging, but was moving left before digging
+//DIG_R -> Digging, but was moving right before digging
+//SPLATTER -> Poor lemming :((
+
+module top_module(
+    input clk,
+    input areset,    // Freshly brainwashed Lemmings walk left.
+    input bump_left,
+    input bump_right,
+    input ground,
+    input dig,
+    output walk_left,
+    output walk_right,
+    output aaah,
+    output digging ); 
+    
+    parameter LEFT=0, RIGHT=1, FALLING_LEFT = 2, FALLING_RIGHT = 3, DIG_L = 4, DIG_R = 5, SPLATTER = 6;
+    reg [2:0] state, next_state;
+    reg [7:0] counter;
+
+    always@(posedge clk)
+        if (next_state == FALLING_LEFT | next_state == FALLING_RIGHT) counter <= counter + 1'b1;
+        else counter <= 0;
+
+    
+    always @(*) begin        
+        case(state)
+            LEFT: if(~ground) next_state = FALLING_LEFT;
+            else if(dig) next_state = DIG_L;
+            else if(bump_left) next_state = RIGHT;
+            	else next_state = LEFT;
+            RIGHT: if(~ground) next_state = FALLING_RIGHT;
+            else if(dig) next_state = DIG_R;
+            else if(bump_right) next_state = LEFT;
+            	else next_state = RIGHT;
+            FALLING_LEFT: if(ground & (counter>20)) next_state = SPLATTER;
+            else if(ground) next_state = LEFT;
+            else next_state = FALLING_LEFT;
+            FALLING_RIGHT: if(ground & (counter>20)) next_state = SPLATTER;
+            else if(ground) next_state = RIGHT;
+            else next_state = FALLING_RIGHT;
+            DIG_L: if(~ground) next_state = FALLING_LEFT;
+            else next_state = DIG_L;
+            DIG_R: if(~ground) next_state = FALLING_RIGHT;
+            else next_state = DIG_R;
+            SPLATTER: next_state = SPLATTER;
+        endcase
+    end
+
+    always @(posedge clk, posedge areset) begin
+        if(areset) state <= LEFT;
+        else state <= next_state;
+    end
+
+    assign walk_left = (state == LEFT);
+    assign walk_right = (state == RIGHT);
+    assign aaah = (state == FALLING_LEFT)|(state == FALLING_RIGHT);
+    assign digging = (state == DIG_L)|(state == DIG_R);
+    
+    
+endmodule
+
