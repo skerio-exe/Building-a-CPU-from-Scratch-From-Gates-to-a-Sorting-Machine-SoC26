@@ -1,0 +1,10 @@
+i281_CPU_Week5\i281cpu_SiCyc.v
+i281_CPU_Week5\tb_i281cpu_SiCyc.v
+i281_CPU_Week5\pc.v
+i281_CPU_Week5\regfile.v
+i281_CPU_Week5\control_unit.v
+i281_CPU_Week5\alu.v
+i281_CPU_Week5\mux.v
+i281_CPU_Week5\data_mem_SiCyc.v
+i281_CPU_Week5\code_mem_SiCyc.v
+i281_CPU_Week5\decoder.v
